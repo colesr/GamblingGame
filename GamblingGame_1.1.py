@@ -2,6 +2,9 @@
 
 import random
 import sys
+import colorama
+from colorama import Fore, Back, Style
+colorama.init(autoreset=True)  # autoreset resets color
 
 myCash = int(1000)
 startingCash = myCash  # track starting amount for net summary
@@ -10,12 +13,15 @@ print("WELCOME TO SAMS HIGH/LOW GAMBLING")
 
 diffLvl = input("What difficulty level would you like to play? 1 Easy, 2 Medium, 3 Hard ")
 if diffLvl == "1":
+    print("You have selected Easy difficulty and will guess between 1 and 77.")
     min_value = 1
     max_value = 77
 if diffLvl == "2":
+    print("You have selected Medium difficulty and will guess between 1 and 7777.")
     min_value = 1
     max_value = 7777
 if diffLvl == "3":
+    print("You have selected Hard difficulty and will guess between 1 and 7777777.")
     min_value = 1
     max_value = 7777777
 
@@ -56,28 +62,28 @@ while myCash > 0:
     print("Your GUESS is " + myGuess + "er.")
 
     # draws another random number
-    secondNumber = random.randint(1, 7777777)
+    secondNumber = random.randint(min_value, max_value)
     print("Your SECOND NUMBER is", secondNumber)
 
     # checks if high/low guess is correct and updates cash
 
     if firstNumber < secondNumber and myGuess == "high":
-        print("YOU WIN!", myBet)
+        print(Fore.GREEN + "YOU WIN!", myBet)
         myCash += myBet
         print("Your NEW CASH BALANCE is", myCash)
         print("Net change from start: $", myCash - startingCash)
     if firstNumber < secondNumber and myGuess == "low":
-        print("YOU LOSE!", myBet)
+        print(Fore.RED + "YOU LOSE!", myBet)
         myCash -= myBet
         print("Your NEW CASH BALANCE is", myCash)
         print("Net change from start: $", myCash - startingCash)
     if firstNumber > secondNumber and myGuess == "high":
-        print("YOU LOSE!", myBet)
+        print(Fore.RED + "YOU LOSE!", myBet)
         myCash -= myBet
         print("Your NEW CASH BALANCE is", myCash)
         print("Net change from start: $", myCash - startingCash)
     if firstNumber > secondNumber and myGuess == "low":
-        print("YOU WIN!", myBet)
+        print(Fore.GREEN + "YOU WIN!", myBet)
         myCash += myBet
         print("Your NEW CASH BALANCE is", myCash)
         print("Net change from start: $", myCash - startingCash)
