@@ -7,6 +7,20 @@ myCash = int(1000)
 startingCash = myCash  # track starting amount for net summary
 
 print("WELCOME TO SAMS HIGH/LOW GAMBLING")
+
+diffLvl = input("What difficulty level would you like to play? 1 Easy, 2 Medium, 3 Hard ")
+if diffLvl == "1":
+    min_value = 1
+    max_value = 77
+if diffLvl == "2":
+    min_value = 1
+    max_value = 7777
+if diffLvl == "3":
+    min_value = 1
+    max_value = 7777777
+
+
+
 myName = input("What is your name? ").capitalize()
 # create "loading/status" bar
 print("Accessing profile for " + myName + "...")
@@ -26,7 +40,7 @@ while myCash > 0:
     print("You have a cash balance of", myCash, "and are betting", myBet)
 
     # generates a random number
-    firstNumber = random.randint(1, 7777777)
+    firstNumber = random.randint(min_value, max_value)
     print("Your FIRST NUMBER is", firstNumber)
 
     # generates a random magic number
