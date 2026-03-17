@@ -34,8 +34,8 @@ while myCash > 0:
     digit_sum1 = sum(int(digit) for digit in str(randNumber))
     digit_sum2 = sum(int(digit) for digit in str(digit_sum1))
     MagicNumber = digit_sum2  # keep as int for multiplier
-    print("Your MAGIC NUMBER: ")
-    print(MagicNumber)
+    # print("Your MAGIC NUMBER: ")
+    # print(MagicNumber)
 
     # collects choice
     myGuess = input("high or low? ").strip().lower()
