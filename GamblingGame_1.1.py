@@ -5,6 +5,11 @@ import sys
 import colorama
 from colorama import Fore, Back, Style
 colorama.init(autoreset=True)  # autoreset resets color
+import json
+import os
+
+
+myName = input("What is your name? ").capitalize()
 
 myCash = int(1000)
 startingCash = myCash  # track starting amount for net summary
@@ -27,7 +32,7 @@ if diffLvl == "3":
 
 
 
-myName = input("What is your name? ").capitalize()
+
 # create "loading/status" bar
 print("Accessing profile for " + myName + "...")
 print("Cash available to wager: ", myCash)
