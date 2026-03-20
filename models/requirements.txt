@@ -1,0 +1,14 @@
+1.0.0 Requirements
+    Saving/retrieving user information and earnings data
+    Streak bonuses
+
+    x User can select difficulty level
+    Count and display the number of rounds played
+    Display win/loss record for each user
+    Session summary page when ending session
+    Achievements/badges
+    Input validation
+    x Color output
+    Save users balance to a file so they can continue where they left off
+    Quit at any time
+
