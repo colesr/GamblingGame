@@ -8,8 +8,8 @@ import sys
 
 print("Welcome to Sam's Slots")
 name = input("What is your name?")
-print(Fore.CYAN + "Hello " + name)
-print(Fore.YELLOW + "Loading account information...")
+print("Hello " + name)
+print("Loading account information...")
 cashBal = 1000
 print(Fore.GREEN + "Account balance: ", cashBal)
 
@@ -66,5 +66,7 @@ def slots(cashBal):
                 continue
             else:
                 break
+
+
 print(slots(cashBal))
 
