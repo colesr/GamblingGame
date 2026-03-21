@@ -26,11 +26,40 @@ def slots(cashBal):
     else:
         addCashAmt = 0
         print(Fore.RED +"You chose not to add cash")
+    # Initialize magicNumber as None (Python's null) so we can safely check it later
+    magicNumber = None
+    addMagicNumber = input("Would you like to buy a magic number for $100 X your magic number? yes/no")
+    if addMagicNumber == "yes":
+        magicNumber = int(input("What is your magic number? 1-7"))
+        # Deduct cost based on chosen magic number
+        if magicNumber == 1:
+            cashBal -= 100
+        elif magicNumber == 2:
+            cashBal -= 200
+        elif magicNumber == 3:
+            cashBal -= 300
+        elif magicNumber == 4:
+            cashBal -= 400
+        elif magicNumber == 5:
+            cashBal -= 500
+        elif magicNumber == 6:
+            cashBal -= 600
+        elif magicNumber == 7:
+            cashBal -= 700
+    elif addMagicNumber == "no":
+        print("You chose not to buy a magic number")
 
     while cashBal >= 0:
 
         bet = int(input("How much money do you want to bet?"))
         print("You bet " + str(bet))
+
+        magicNumberChoice = input("Would you like to use your magic number mutlipier?")
+        if magicNumberChoice == "yes":
+            bet *= magicNumber
+        # Example of checking for None (null in Python): only proceed if a magic number was chosen
+        if magicNumber is not None:
+            pass
 
         a = random.randint(1, 9)
         b = random.randint(1, 9)
@@ -41,7 +70,7 @@ def slots(cashBal):
             print(Fore.GREEN + "You won BIG!")
             winnings = bet ** bet
             cashBal += bet ** bet
-            print(Fore.GREEN + "You won " + str(winnings) + " and your new balance is " + str(cashBal))
+            print(Fore.GREEN + "You won " + sys.set_int_max_str_digits(winnings) + " and your new balance is " + str(cashBal))
             game = input("Play again? yes/no")
             if game == "yes":
                 continue
@@ -51,7 +80,7 @@ def slots(cashBal):
             print(Fore.GREEN + "You won!")
             winnings = bet ** bet
             cashBal += bet ** bet
-            print(Fore.GREEN + "You won " + str(winnings) + " and your new balance is " + str(cashBal))
+            print(Fore.GREEN + "You won " + sys.set_int_max_str_digits(winnings) + " and your new balance is " + str(cashBal))
             game = input("Play again? yes/no")
             if game == "yes":
                 continue
