@@ -8,7 +8,7 @@
     "home": "Forest",
     "home_lore": "raised among ancient trees and hidden paths",
     "created": "2026-03-21T21:10:15",
-    "last_played": "2026-03-21T21:40:57",
+    "last_played": "2026-03-21T22:36:27",
     "level": 1,
     "xp": 0,
     "xp_to_next": 100,
@@ -92,7 +92,7 @@
     },
     "save_slots": {
       "slot_1": {
-        "timestamp": "2026-03-21T21:40:57",
+        "timestamp": "2026-03-21T22:36:27",
         "data": {
           "id": "93d9dac5-ea22-4cc4-9244-04b4077900a0",
           "name": "Sam",
@@ -102,7 +102,7 @@
           "home": "Forest",
           "home_lore": "raised among ancient trees and hidden paths",
           "created": "2026-03-21T21:10:15",
-          "last_played": "2026-03-21T21:40:57",
+          "last_played": "2026-03-21T22:36:27",
           "level": 1,
           "xp": 0,
           "xp_to_next": 100,
@@ -197,7 +197,7 @@
     "home": "Sky",
     "home_lore": "a child of the clouds, unbounded and restless",
     "created": "2026-03-21T21:51:21",
-    "last_played": "2026-03-21T21:51:21",
+    "last_played": "2026-03-21T22:37:16",
     "level": 1,
     "xp": 0,
     "xp_to_next": 100,
@@ -283,7 +283,7 @@
     },
     "save_slots": {
       "slot_1": {
-        "timestamp": "2026-03-21T21:51:21",
+        "timestamp": "2026-03-21T22:37:16",
         "data": {
           "id": "9270f635-ead4-4231-a243-8017524b0a6b",
           "name": "pam",
@@ -293,7 +293,7 @@
           "home": "Sky",
           "home_lore": "a child of the clouds, unbounded and restless",
           "created": "2026-03-21T21:51:21",
-          "last_played": "2026-03-21T21:51:21",
+          "last_played": "2026-03-21T22:37:16",
           "level": 1,
           "xp": 0,
           "xp_to_next": 100,
@@ -390,7 +390,7 @@
     "home": "Forest",
     "home_lore": "raised among ancient trees and hidden paths",
     "created": "2026-03-21T21:54:31",
-    "last_played": "2026-03-21T22:04:47",
+    "last_played": "2026-03-21T22:35:32",
     "level": 1,
     "xp": 0,
     "xp_to_next": 100,
@@ -474,7 +474,7 @@
     },
     "save_slots": {
       "slot_1": {
-        "timestamp": "2026-03-21T22:04:47",
+        "timestamp": "2026-03-21T22:35:32",
         "data": {
           "id": "06b4db10-ad6e-4b66-ac29-8afa5c723422",
           "name": "dumbass",
@@ -484,7 +484,7 @@
           "home": "Forest",
           "home_lore": "raised among ancient trees and hidden paths",
           "created": "2026-03-21T21:54:31",
-          "last_played": "2026-03-21T22:04:47",
+          "last_played": "2026-03-21T22:35:32",
           "level": 1,
           "xp": 0,
           "xp_to_next": 100,
