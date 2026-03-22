@@ -37,6 +37,31 @@
     const canvas = document.getElementById('skylineCanvas');
     const ctx = canvas.getContext('2d');
     const container = canvas.parentElement;
+    const hudEl = document.getElementById('hud');
+
+    // Score and persistence
+    const SAVE_KEY = 'retroShooterStats';
+    let score = 0;
+    let best = 0;
+    let lifetime = 0;
+    function loadStats(){
+      try {
+        const s = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+        best = (s && s.best) ? s.best|0 : 0;
+        lifetime = (s && s.lifetime) ? s.lifetime|0 : 0;
+      } catch(e) {
+        best = 0; lifetime = 0;
+      }
+    }
+    function saveStats(){
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify({ best, lifetime }));
+      } catch(e) {}
+    }
+    function updateHUD(){
+      if (!hudEl) return;
+      hudEl.textContent = `SYSTEM: CRUISING_MODE ACTIVE... | LMB TO FIRE | SCORE ${score} | BEST ${best}`;
+    }
 
     // Canvas sizing
     let width = 0, height = 0;
@@ -46,6 +71,13 @@
     }
     window.addEventListener('resize', resize);
     resize();
+
+    // Load persisted stats and update HUD once
+    loadStats();
+    updateHUD();
+
+    // Persist on page unload as a safety net
+    window.addEventListener('beforeunload', saveStats);
 
     // World entities
     const buildings = [];
@@ -157,6 +189,13 @@
           const bd = buildings[j];
           if (bd.collidesWithPoint(b.x, b.y, b.z)){
             spawnExplosion(b.x, b.y, b.z, bd.color);
+            // Update score and persistence
+            score += 1;
+            lifetime += 1;
+            if (score > best) best = score;
+            updateHUD();
+            saveStats();
+            // Recycle building and remove bullet
             bd.reset();
             bullets.splice(i, 1);
             break;
