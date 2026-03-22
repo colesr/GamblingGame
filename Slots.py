@@ -10,6 +10,44 @@ import os
 # File to store player data
 SAVE_FILE = "player_data.json"
 
+# Utility: load all players safely
+
+def load_all_players():
+    """Load all player records from disk safely. Returns dict[name] -> data."""
+    all_players = {}
+    if os.path.exists(SAVE_FILE):
+        try:
+            with open(SAVE_FILE, 'r') as f:
+                content = f.read().strip()
+                if content:
+                    all_players = json.loads(content)
+        except (json.JSONDecodeError, OSError):
+            # Corrupt or unreadable file; start fresh in-memory
+            all_players = {}
+    return all_players
+
+# Leaderboard helpers
+
+def get_leaderboard(top_n=10):
+    """Return a list of (name, high_score, wins, games_played) sorted by high_score desc."""
+    players = load_all_players()
+    items = []
+    for name, data in players.items():
+        items.append((name, int(data.get("high_score", 0)), int(data.get("wins", 0)), int(data.get("games_played", 0))))
+    items.sort(key=lambda x: x[1], reverse=True)
+    return items[:top_n]
+
+
+def print_leaderboard(top_n=10):
+    board = get_leaderboard(top_n)
+    print("\n=== LEADERBOARD (Top {} by High Score) ===".format(top_n))
+    if not board:
+        print("No scores yet. Be the first to play!")
+        return
+    for idx, (pname, score, wins, games) in enumerate(board, start=1):
+        print(f"{idx}. {pname:15}  High Score: ${score:<8}  W:{wins}  G:{games}")
+    print("=== End Leaderboard ===\n")
+
 # """Load player data from file, or create new player"""
 
 def load_player_data(name):
@@ -39,20 +77,24 @@ def load_player_data(name):
     }
 
 def save_player_data(player_data):
-    """Save player data to file"""
-    all_players = {}
-
-# Load existing data first
-    if os.path.exists(SAVE_FILE):
-        with open(SAVE_FILE, 'r') as f:
-            all_players = json.load(f)
+    """Save player data to file safely, merging with existing players."""
+    # Load existing data first (safe)
+    all_players = load_all_players()
 
     # Update with current player
-    all_players[player_data["name"]] = player_data
+    all_players[player_data.get("name", "Unknown")] = player_data
 
     # Save back to file
-    with open(SAVE_FILE, 'w') as f:
-        json.dump(all_players, f, indent=4)
+    try:
+        with open(SAVE_FILE, 'w') as f:
+            json.dump(all_players, f, indent=4)
+    except OSError:
+        # As a fallback, try to at least write the single player entry
+        try:
+            with open(SAVE_FILE, 'w') as f:
+                json.dump({player_data.get("name", "Unknown"): player_data}, f, indent=4)
+        except OSError:
+            pass
 
 print("Welcome to Sam's Slots")
 name = input("What is your name?")
@@ -67,6 +109,11 @@ print(f"\nWelcome back, {name}!")
 print(f"Balance: ${player['balance']}")
 print(f"Win/Loss Record: {player['wins']}W - {player['losses']}L")
 print(f"High Score: ${player['high_score']}")
+
+# Offer to show leaderboard
+view = input("Would you like to view the LEADERBOARD? yes/no ")
+if view.strip().lower().startswith('y'):
+    print_leaderboard(10)
 
 # play = input("What slot would you like to play 1, 2 3?")
 # print("You chose " + play)
@@ -183,6 +230,16 @@ def slots(player):
                 continue
             else:
                 break
+
+    # After session ends, persist final balance and offer leaderboard
+    player["balance"] = cashBal
+    if cashBal > player.get("high_score", 0):
+        player["high_score"] = cashBal
+    save_player_data(player)
+    print(f"\nSession ended. Final balance: ${cashBal}")
+    see = input("View the LEADERBOARD now? yes/no ")
+    if see.strip().lower().startswith('y'):
+        print_leaderboard(10)
 
 
 slots(player)
