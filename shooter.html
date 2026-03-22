@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Retro Skyline Shooter</title>
+  <style>
+    body { background:#0a0a12; margin:0; font-family: monospace; color:#00ffcc; }
+    .retro-container {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      background: #050510;
+      overflow: hidden;
+      border: 1px solid #00ffcc;
+      box-shadow: 0 0 18px rgba(0,255,204,0.15) inset;
+      user-select: none;
+    }
+    .hud {
+      position:absolute; top:10px; left:10px; z-index:10; pointer-events:none; font-size:12px;
+      text-shadow: 0 0 8px rgba(0,255,204,0.65);
+    }
+    /* Hide the mouse cursor over the canvas; we'll draw a crosshair instead */
+    .retro-container, .retro-container canvas { cursor: none; }
+  </style>
+</head>
+<body>
+  <div class="retro-container" id="game">
+    <div class="hud" id="hud">SYSTEM: CRUISING_MODE ACTIVE... | LMB TO FIRE</div>
+    <canvas id="skylineCanvas"></canvas>
+  </div>
+
+  <script>
+  // <![CDATA[
+  document.addEventListener("DOMContentLoaded", function() {
+  (function() {
+    const canvas = document.getElementById('skylineCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = canvas.parentElement;
+
+    // Canvas sizing
+    let width = 0, height = 0;
+    function resize() {
+      width = canvas.width = container.clientWidth;
+      height = canvas.height = container.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // World entities
+    const buildings = [];
+    const bullets = [];
+    const explosions = [];
+
+    const numBuildings = 40;
+    const worldSpeed = 3; // how fast the world approaches the camera (z decreases)
+    const focal = 300;    // perspective focal length
+
+    // Input / Crosshair
+    let mouseX = width * 0.5;
+    let mouseY = height * 0.5;
+    let isMouseInside = false;
+
+    container.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+    container.addEventListener('mouseenter', () => isMouseInside = true);
+    container.addEventListener('mouseleave', () => isMouseInside = false);
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return; // left click only
+      fireBullet(mouseX, mouseY);
+    });
+
+    // Utility random
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    class Building {
+      constructor(){ this.reset(true); }
+      reset(initial = false){
+        this.x = (Math.random() - 0.5) * 1500; // left/right spread
+        this.y = 100;                           // base height above horizon
+        this.z = initial ? Math.random() * 2000 + 100 : 2000 + rand(100, 400);
+        this.w = 40 + Math.random() * 80;
+        this.h = 50 + Math.random() * 300;
+        const colors = ['#ff00ff', '#00ffff', '#7000ff'];
+        this.color = colors[(Math.random() * colors.length) | 0];
+      }
+      update(){
+        this.z -= worldSpeed;
+        if (this.z <= 1) this.reset();
+      }
+      get2D(){
+        const scale = focal / this.z;
+        return {
+          x: width / 2 + this.x * scale,
+          y: height / 2 + this.y * scale,
+          w: this.w * scale,
+          h: this.h * scale,
+          scale
+        };
+      }
+      draw(){
+        const p = this.get2D();
+        ctx.strokeStyle = this.color;
+        ctx.lineWidth = Math.max(0.5, p.scale * 0.5);
+        ctx.strokeRect(p.x - p.w / 2, p.y - p.h, p.w, p.h);
+      }
+      // Simple AABB collision in world coordinates when z planes are close
+      collidesWithPoint(wx, wy, wz){
+        if (Math.abs(wz - this.z) > 20) return false; // z-plane gate
+        const half = this.w * 0.5;
+        if (wx < this.x - half || wx > this.x + half) return false;
+        if (wy < this.y - this.h || wy > this.y) return false;
+        return true;
+      }
+    }
+
+    // Build world
+    for (let i = 0; i < numBuildings; i++) buildings.push(new Building());
+
+    // Bullet model: emitted from camera origin (0,0,~0) forward along ray defined by click
+    function fireBullet(screenX, screenY){
+      const vz = 35; // forward speed per frame in world units
+      // From projection x_screen = cx + x * (f/z) => dx/dz = (x_screen - cx)/f
+      const dirScaleX = (screenX - width * 0.5) / focal; // dx per unit z
+      const dirScaleY = (screenY - height * 0.5) / focal; // dy per unit z
+      bullets.push({
+        x: 0,
+        y: 0,
+        z: 5,           // start slightly in front of camera to avoid huge scale
+        vz: vz,
+        dirScaleX,
+        dirScaleY,
+        alive: true,
+      });
+    }
+
+    function updateBullets(){
+      for (let i = bullets.length - 1; i >= 0; i--){
+        const b = bullets[i];
+        // Advance forward
+        b.z += b.vz;
+        b.x += b.dirScaleX * b.vz;
+        b.y += b.dirScaleY * b.vz;
+
+        // Culling
+        if (b.z > 2600 || b.y < -1200 || b.y > 1200 || Math.abs(b.x) > 4000){
+          bullets.splice(i, 1);
+          continue;
+        }
+
+        // Collision vs buildings
+        for (let j = 0; j < buildings.length; j++){
+          const bd = buildings[j];
+          if (bd.collidesWithPoint(b.x, b.y, b.z)){
+            spawnExplosion(b.x, b.y, b.z, bd.color);
+            bd.reset();
+            bullets.splice(i, 1);
+            break;
+          }
+        }
+      }
+    }
+
+    function drawBullets(){
+      for (const b of bullets){
+        if (b.z <= 1) continue;
+        const scale = focal / b.z;
+        const sx = width / 2 + b.x * scale;
+        const sy = height / 2 + b.y * scale;
+        const r = Math.max(1, 2.2 * scale * 6); // small but grows slightly when near
+        ctx.beginPath();
+        ctx.fillStyle = '#ffff66';
+        ctx.shadowColor = '#ffff66';
+        ctx.shadowBlur = 8;
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // Explosion particles
+    function spawnExplosion(x, y, z, color){
+      const n = 28 + (Math.random() * 12)|0;
+      for (let i = 0; i < n; i++){
+        const ang = Math.random() * Math.PI * 2;
+        const spd = rand(0.5, 4.0);
+        explosions.push({
+          x, y, z,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd * 0.6 - rand(0.2, 0.8),
+          vz: rand(-1.0, 1.5),
+          life: rand(20, 40),
+          color
+        });
+      }
+    }
+
+    function updateExplosions(){
+      for (let i = explosions.length - 1; i >= 0; i--){
+        const p = explosions[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.z += p.vz;
+        p.vy += 0.02; // light gravity
+        p.life -= 1;
+        if (p.z <= 1 || p.z > 2600 || p.life <= 0){
+          explosions.splice(i, 1);
+        }
+      }
+    }
+
+    function drawExplosions(){
+      for (const p of explosions){
+        if (p.z <= 1) continue;
+        const scale = focal / p.z;
+        const sx = width / 2 + p.x * scale;
+        const sy = height / 2 + p.y * scale;
+        const r = Math.max(0.5, 1.8 * scale * 10);
+        ctx.beginPath();
+        ctx.fillStyle = p.color || '#ffcc66';
+        ctx.globalAlpha = Math.max(0.2, Math.min(1, p.life / 40));
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawCrosshair(){
+      if (!isMouseInside) return;
+      const x = mouseX, y = mouseY;
+      const r = 12;
+      ctx.save();
+      ctx.strokeStyle = '#00ffcc';
+      ctx.lineWidth = 1.2;
+      ctx.shadowColor = '#00ffcc';
+      ctx.shadowBlur = 6;
+      // Outer circle
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      // Cross lines
+      ctx.beginPath();
+      ctx.moveTo(x - r - 6, y); ctx.lineTo(x - 3, y);
+      ctx.moveTo(x + r + 6, y); ctx.lineTo(x + 3, y);
+      ctx.moveTo(x, y - r - 6); ctx.lineTo(x, y - 3);
+      ctx.moveTo(x, y + r + 6); ctx.lineTo(x, y + 3);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.restore();
+    }
+
+    // Main loop
+    function animate(){
+      // Clear screen
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(0, 0, width, height);
+
+      // Sort by depth so closer buildings draw over distant ones
+      buildings.sort((a, b) => b.z - a.z);
+
+      // Update and draw world
+      buildings.forEach(b => { b.update(); b.draw(); });
+
+      // Update projectiles and effects
+      updateBullets();
+      updateExplosions();
+
+      // Draw effects above buildings for readability
+      drawExplosions();
+      drawBullets();
+      drawCrosshair();
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  })();
+  });
+  // ]]>
+  </script>
+</body>
+</html>
