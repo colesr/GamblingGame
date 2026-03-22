@@ -1,0 +1,10 @@
+{
+    "sam": {
+        "name": "sam",
+        "balance": -6200,
+        "wins": 0,
+        "losses": 1,
+        "high_score": 0,
+        "games_played": 1
+    }
+}

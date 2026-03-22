@@ -1,0 +1,573 @@
+{
+  "Sam": {
+    "id": "93d9dac5-ea22-4cc4-9244-04b4077900a0",
+    "name": "Sam",
+    "hero_type": "Slayer",
+    "gift": "Sight",
+    "magic": "Lightning",
+    "home": "Forest",
+    "home_lore": "raised among ancient trees and hidden paths",
+    "created": "2026-03-21T21:10:15",
+    "last_played": "2026-03-21T21:40:57",
+    "level": 1,
+    "xp": 0,
+    "xp_to_next": 100,
+    "hp": 100,
+    "hp_max": 100,
+    "mana": 60,
+    "mana_max": 60,
+    "stamina": 50,
+    "stamina_max": 50,
+    "gold": 100,
+    "rare_essence": 0,
+    "attributes": {
+      "strength": 7,
+      "intelligence": 5,
+      "stealth": 6,
+      "charisma": 5,
+      "agility": 5,
+      "willpower": 5,
+      "perception": 8,
+      "magic_power": 6
+    },
+    "magic_system": {
+      "element": "Lightning",
+      "spells": [
+        "Lightning Bolt"
+      ],
+      "mastery": 1
+    },
+    "inventory": [
+      {
+        "name": "Carved Bow",
+        "type": "weapon",
+        "value": 40,
+        "stats": {
+          "agility": 1
+        },
+        "description": "Bent from a living branch. Still grows.",
+        "id": "f8cc96bf-6adb-4d50-b986-42a29a4ea875",
+        "acquired": "2026-03-21T21:10:15"
+      }
+    ],
+    "equipped": {
+      "weapon": {
+        "name": "Carved Bow",
+        "type": "weapon",
+        "value": 40,
+        "stats": {
+          "agility": 1
+        },
+        "description": "Bent from a living branch. Still grows.",
+        "id": "f8cc96bf-6adb-4d50-b986-42a29a4ea875",
+        "acquired": "2026-03-21T21:10:15"
+      },
+      "armor": null,
+      "relic": null,
+      "accessory": null
+    },
+    "flags": {
+      "intro_complete": false,
+      "act": 1,
+      "quests_complete": [],
+      "quests_active": [],
+      "choices": [],
+      "world_events": []
+    },
+    "reputation": {
+      "kingdom": 0,
+      "thieves": 0,
+      "mages": 0,
+      "wilds": 0,
+      "underworld": 0
+    },
+    "stats": {
+      "quests_complete": 0,
+      "quests_failed": 0,
+      "enemies_defeated": 0,
+      "spells_cast": 0,
+      "times_died": 0,
+      "gold_earned": 0,
+      "play_time_seconds": 0
+    },
+    "save_slots": {
+      "slot_1": {
+        "timestamp": "2026-03-21T21:40:57",
+        "data": {
+          "id": "93d9dac5-ea22-4cc4-9244-04b4077900a0",
+          "name": "Sam",
+          "hero_type": "Slayer",
+          "gift": "Sight",
+          "magic": "Lightning",
+          "home": "Forest",
+          "home_lore": "raised among ancient trees and hidden paths",
+          "created": "2026-03-21T21:10:15",
+          "last_played": "2026-03-21T21:40:57",
+          "level": 1,
+          "xp": 0,
+          "xp_to_next": 100,
+          "hp": 100,
+          "hp_max": 100,
+          "mana": 60,
+          "mana_max": 60,
+          "stamina": 50,
+          "stamina_max": 50,
+          "gold": 100,
+          "rare_essence": 0,
+          "attributes": {
+            "strength": 7,
+            "intelligence": 5,
+            "stealth": 6,
+            "charisma": 5,
+            "agility": 5,
+            "willpower": 5,
+            "perception": 8,
+            "magic_power": 6
+          },
+          "magic_system": {
+            "element": "Lightning",
+            "spells": [
+              "Lightning Bolt"
+            ],
+            "mastery": 1
+          },
+          "inventory": [
+            {
+              "name": "Carved Bow",
+              "type": "weapon",
+              "value": 40,
+              "stats": {
+                "agility": 1
+              },
+              "description": "Bent from a living branch. Still grows.",
+              "id": "f8cc96bf-6adb-4d50-b986-42a29a4ea875",
+              "acquired": "2026-03-21T21:10:15"
+            }
+          ],
+          "equipped": {
+            "weapon": {
+              "name": "Carved Bow",
+              "type": "weapon",
+              "value": 40,
+              "stats": {
+                "agility": 1
+              },
+              "description": "Bent from a living branch. Still grows.",
+              "id": "f8cc96bf-6adb-4d50-b986-42a29a4ea875",
+              "acquired": "2026-03-21T21:10:15"
+            },
+            "armor": null,
+            "relic": null,
+            "accessory": null
+          },
+          "flags": {
+            "intro_complete": false,
+            "act": 1,
+            "quests_complete": [],
+            "quests_active": [],
+            "choices": [],
+            "world_events": []
+          },
+          "reputation": {
+            "kingdom": 0,
+            "thieves": 0,
+            "mages": 0,
+            "wilds": 0,
+            "underworld": 0
+          },
+          "stats": {
+            "quests_complete": 0,
+            "quests_failed": 0,
+            "enemies_defeated": 0,
+            "spells_cast": 0,
+            "times_died": 0,
+            "gold_earned": 0,
+            "play_time_seconds": 0
+          }
+        }
+      }
+    }
+  },
+  "pam": {
+    "id": "9270f635-ead4-4231-a243-8017524b0a6b",
+    "name": "pam",
+    "hero_type": "Genius",
+    "gift": "Physical Strength",
+    "magic": "Nano",
+    "home": "Sky",
+    "home_lore": "a child of the clouds, unbounded and restless",
+    "created": "2026-03-21T21:51:21",
+    "last_played": "2026-03-21T21:51:21",
+    "level": 1,
+    "xp": 0,
+    "xp_to_next": 100,
+    "hp": 100,
+    "hp_max": 100,
+    "mana": 60,
+    "mana_max": 60,
+    "stamina": 50,
+    "stamina_max": 50,
+    "gold": 100,
+    "rare_essence": 0,
+    "attributes": {
+      "strength": 8,
+      "intelligence": 8,
+      "stealth": 5,
+      "charisma": 6,
+      "agility": 5,
+      "willpower": 5,
+      "perception": 5,
+      "magic_power": 6
+    },
+    "magic_system": {
+      "element": "Nano",
+      "spells": [
+        "Nano Bolt"
+      ],
+      "mastery": 1
+    },
+    "inventory": [
+      {
+        "name": "Wind Charm",
+        "type": "relic",
+        "value": 45,
+        "stats": {
+          "agility": 1,
+          "magic_power": 1
+        },
+        "description": "Hums when a storm is three days out.",
+        "id": "83136b48-d943-4894-a2b4-5851fafdc9a0",
+        "acquired": "2026-03-21T21:51:21"
+      }
+    ],
+    "equipped": {
+      "weapon": null,
+      "armor": null,
+      "relic": {
+        "name": "Wind Charm",
+        "type": "relic",
+        "value": 45,
+        "stats": {
+          "agility": 1,
+          "magic_power": 1
+        },
+        "description": "Hums when a storm is three days out.",
+        "id": "83136b48-d943-4894-a2b4-5851fafdc9a0",
+        "acquired": "2026-03-21T21:51:21"
+      },
+      "accessory": null
+    },
+    "flags": {
+      "intro_complete": false,
+      "act": 1,
+      "quests_complete": [],
+      "quests_active": [],
+      "choices": [],
+      "world_events": []
+    },
+    "reputation": {
+      "kingdom": 0,
+      "thieves": 0,
+      "mages": 0,
+      "wilds": 0,
+      "underworld": 0
+    },
+    "stats": {
+      "quests_complete": 0,
+      "quests_failed": 0,
+      "enemies_defeated": 0,
+      "spells_cast": 0,
+      "times_died": 0,
+      "gold_earned": 0,
+      "play_time_seconds": 0
+    },
+    "save_slots": {
+      "slot_1": {
+        "timestamp": "2026-03-21T21:51:21",
+        "data": {
+          "id": "9270f635-ead4-4231-a243-8017524b0a6b",
+          "name": "pam",
+          "hero_type": "Genius",
+          "gift": "Physical Strength",
+          "magic": "Nano",
+          "home": "Sky",
+          "home_lore": "a child of the clouds, unbounded and restless",
+          "created": "2026-03-21T21:51:21",
+          "last_played": "2026-03-21T21:51:21",
+          "level": 1,
+          "xp": 0,
+          "xp_to_next": 100,
+          "hp": 100,
+          "hp_max": 100,
+          "mana": 60,
+          "mana_max": 60,
+          "stamina": 50,
+          "stamina_max": 50,
+          "gold": 100,
+          "rare_essence": 0,
+          "attributes": {
+            "strength": 8,
+            "intelligence": 8,
+            "stealth": 5,
+            "charisma": 6,
+            "agility": 5,
+            "willpower": 5,
+            "perception": 5,
+            "magic_power": 6
+          },
+          "magic_system": {
+            "element": "Nano",
+            "spells": [
+              "Nano Bolt"
+            ],
+            "mastery": 1
+          },
+          "inventory": [
+            {
+              "name": "Wind Charm",
+              "type": "relic",
+              "value": 45,
+              "stats": {
+                "agility": 1,
+                "magic_power": 1
+              },
+              "description": "Hums when a storm is three days out.",
+              "id": "83136b48-d943-4894-a2b4-5851fafdc9a0",
+              "acquired": "2026-03-21T21:51:21"
+            }
+          ],
+          "equipped": {
+            "weapon": null,
+            "armor": null,
+            "relic": {
+              "name": "Wind Charm",
+              "type": "relic",
+              "value": 45,
+              "stats": {
+                "agility": 1,
+                "magic_power": 1
+              },
+              "description": "Hums when a storm is three days out.",
+              "id": "83136b48-d943-4894-a2b4-5851fafdc9a0",
+              "acquired": "2026-03-21T21:51:21"
+            },
+            "accessory": null
+          },
+          "flags": {
+            "intro_complete": false,
+            "act": 1,
+            "quests_complete": [],
+            "quests_active": [],
+            "choices": [],
+            "world_events": []
+          },
+          "reputation": {
+            "kingdom": 0,
+            "thieves": 0,
+            "mages": 0,
+            "wilds": 0,
+            "underworld": 0
+          },
+          "stats": {
+            "quests_complete": 0,
+            "quests_failed": 0,
+            "enemies_defeated": 0,
+            "spells_cast": 0,
+            "times_died": 0,
+            "gold_earned": 0,
+            "play_time_seconds": 0
+          }
+        }
+      }
+    }
+  },
+  "dumbass": {
+    "id": "06b4db10-ad6e-4b66-ac29-8afa5c723422",
+    "name": "dumbass",
+    "hero_type": "Sneak",
+    "gift": "Speed",
+    "magic": "Earth",
+    "home": "Forest",
+    "home_lore": "raised among ancient trees and hidden paths",
+    "created": "2026-03-21T21:54:31",
+    "last_played": "2026-03-21T22:04:47",
+    "level": 1,
+    "xp": 0,
+    "xp_to_next": 100,
+    "hp": 100,
+    "hp_max": 100,
+    "mana": 60,
+    "mana_max": 60,
+    "stamina": 50,
+    "stamina_max": 50,
+    "gold": 100,
+    "rare_essence": 0,
+    "attributes": {
+      "strength": 5,
+      "intelligence": 6,
+      "stealth": 8,
+      "charisma": 6,
+      "agility": 8,
+      "willpower": 5,
+      "perception": 5,
+      "magic_power": 5
+    },
+    "magic_system": {
+      "element": "Earth",
+      "spells": [
+        "Earth Bolt"
+      ],
+      "mastery": 1
+    },
+    "inventory": [
+      {
+        "name": "Carved Bow",
+        "type": "weapon",
+        "value": 40,
+        "stats": {
+          "agility": 1
+        },
+        "description": "Bent from a living branch. Still grows.",
+        "id": "6da307ee-1234-421b-bc89-1c5151a0f100",
+        "acquired": "2026-03-21T21:54:31"
+      }
+    ],
+    "equipped": {
+      "weapon": {
+        "name": "Carved Bow",
+        "type": "weapon",
+        "value": 40,
+        "stats": {
+          "agility": 1
+        },
+        "description": "Bent from a living branch. Still grows.",
+        "id": "6da307ee-1234-421b-bc89-1c5151a0f100",
+        "acquired": "2026-03-21T21:54:31"
+      },
+      "armor": null,
+      "relic": null,
+      "accessory": null
+    },
+    "flags": {
+      "intro_complete": false,
+      "act": 1,
+      "quests_complete": [],
+      "quests_active": [],
+      "choices": [],
+      "world_events": []
+    },
+    "reputation": {
+      "kingdom": 0,
+      "thieves": 0,
+      "mages": 0,
+      "wilds": 0,
+      "underworld": 0
+    },
+    "stats": {
+      "quests_complete": 0,
+      "quests_failed": 0,
+      "enemies_defeated": 0,
+      "spells_cast": 0,
+      "times_died": 0,
+      "gold_earned": 0,
+      "play_time_seconds": 0
+    },
+    "save_slots": {
+      "slot_1": {
+        "timestamp": "2026-03-21T22:04:47",
+        "data": {
+          "id": "06b4db10-ad6e-4b66-ac29-8afa5c723422",
+          "name": "dumbass",
+          "hero_type": "Sneak",
+          "gift": "Speed",
+          "magic": "Earth",
+          "home": "Forest",
+          "home_lore": "raised among ancient trees and hidden paths",
+          "created": "2026-03-21T21:54:31",
+          "last_played": "2026-03-21T22:04:47",
+          "level": 1,
+          "xp": 0,
+          "xp_to_next": 100,
+          "hp": 100,
+          "hp_max": 100,
+          "mana": 60,
+          "mana_max": 60,
+          "stamina": 50,
+          "stamina_max": 50,
+          "gold": 100,
+          "rare_essence": 0,
+          "attributes": {
+            "strength": 5,
+            "intelligence": 6,
+            "stealth": 8,
+            "charisma": 6,
+            "agility": 8,
+            "willpower": 5,
+            "perception": 5,
+            "magic_power": 5
+          },
+          "magic_system": {
+            "element": "Earth",
+            "spells": [
+              "Earth Bolt"
+            ],
+            "mastery": 1
+          },
+          "inventory": [
+            {
+              "name": "Carved Bow",
+              "type": "weapon",
+              "value": 40,
+              "stats": {
+                "agility": 1
+              },
+              "description": "Bent from a living branch. Still grows.",
+              "id": "6da307ee-1234-421b-bc89-1c5151a0f100",
+              "acquired": "2026-03-21T21:54:31"
+            }
+          ],
+          "equipped": {
+            "weapon": {
+              "name": "Carved Bow",
+              "type": "weapon",
+              "value": 40,
+              "stats": {
+                "agility": 1
+              },
+              "description": "Bent from a living branch. Still grows.",
+              "id": "6da307ee-1234-421b-bc89-1c5151a0f100",
+              "acquired": "2026-03-21T21:54:31"
+            },
+            "armor": null,
+            "relic": null,
+            "accessory": null
+          },
+          "flags": {
+            "intro_complete": false,
+            "act": 1,
+            "quests_complete": [],
+            "quests_active": [],
+            "choices": [],
+            "world_events": []
+          },
+          "reputation": {
+            "kingdom": 0,
+            "thieves": 0,
+            "mages": 0,
+            "wilds": 0,
+            "underworld": 0
+          },
+          "stats": {
+            "quests_complete": 0,
+            "quests_failed": 0,
+            "enemies_defeated": 0,
+            "spells_cast": 0,
+            "times_died": 0,
+            "gold_earned": 0,
+            "play_time_seconds": 0
+          }
+        }
+      }
+    }
+  }
+}

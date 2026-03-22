@@ -7,8 +7,27 @@ import sys
 import json
 import os
 
+colorama.init(autoreset=True)
+
 # File to store player data
 SAVE_FILE = "player_data.json"
+
+# Simple safe integer input helper
+
+def prompt_int(prompt, min_val=None, max_val=None):
+    while True:
+        raw = input(prompt)
+        try:
+            val = int(raw)
+            if min_val is not None and val < min_val:
+                print(Fore.YELLOW + f"Please enter a number >= {min_val}.")
+                continue
+            if max_val is not None and val > max_val:
+                print(Fore.YELLOW + f"Please enter a number <= {max_val}.")
+                continue
+            return val
+        except ValueError:
+            print(Fore.YELLOW + "Please enter a valid whole number.")
 
 # Utility: load all players safely
 
@@ -122,9 +141,9 @@ def slots(player):
     # Work with the player's current balance and stats
     cashBal = player.get("balance", 1000)
 
-    addCash = input("Would you like to add cash? yes/no")
-    if addCash.lower() == "yes":
-        addCashAmt = int(input("How much would you like to add?"))
+    addCash = input("Would you like to add cash? yes/no ")
+    if addCash.strip().lower().startswith("y"):
+        addCashAmt = prompt_int("How much would you like to add? ", min_val=1)
         cashBal += addCashAmt
         print(Fore.GREEN + "You chose to add " + str(addCashAmt) + " and you have a total balance of " + str(cashBal))
         # Persist balance change
@@ -136,44 +155,37 @@ def slots(player):
 
     # Initialize magicNumber as None (Python's null) so we can safely check it later
     magicNumber = None
-    addMagicNumber = input("Would you like to buy a magic number for $100 X your magic number? yes/no")
-    if addMagicNumber.lower() == "yes":
-        magicNumber = int(input("What is your magic number? 1-7"))
-        # Deduct cost based on chosen magic number
-        if magicNumber == 1:
-            cashBal -= 100
-        elif magicNumber == 2:
-            cashBal -= 200
-        elif magicNumber == 3:
-            cashBal -= 300
-        elif magicNumber == 4:
-            cashBal -= 400
-        elif magicNumber == 5:
-            cashBal -= 500
-        elif magicNumber == 6:
-            cashBal -= 600
-        elif magicNumber == 7:
-            cashBal -= 700
-        # Persist balance change after purchasing magic number
-        player["balance"] = cashBal
-        save_player_data(player)
-    elif addMagicNumber.lower() == "no":
+    addMagicNumber = input("Would you like to buy a magic number for $100 X your magic number? yes/no ")
+    if addMagicNumber.strip().lower().startswith("y"):
+        magicNumber = prompt_int("What is your magic number? 1-7 ", min_val=1, max_val=7)
+        cost = magicNumber * 100
+        if cashBal < cost:
+            print(Fore.YELLOW + f"Insufficient funds for magic number {magicNumber}. Cost is ${cost}, balance is ${cashBal}. Skipping purchase.")
+            magicNumber = None
+        else:
+            cashBal -= cost
+            # Persist balance change after purchasing magic number
+            player["balance"] = cashBal
+            save_player_data(player)
+    else:
         print("You chose not to buy a magic number")
 
-    while cashBal >= 0:
+    while cashBal > 0:
 
-        bet = int(input("How much money do you want to bet?"))
+        print(Fore.CYAN + f"Current balance: ${cashBal}")
+        bet = prompt_int("How much money do you want to bet? ", min_val=1, max_val=cashBal)
         print("You bet " + str(bet))
 
-        magicNumberChoice = input("Would you like to use your magic number mutlipier?")
-        if magicNumberChoice.lower() == "yes":
+        magicNumberChoice = input("Would you like to use your magic number multiplier? yes/no ")
+        if magicNumberChoice.strip().lower().startswith("y"):
             if magicNumber is not None:
-                bet *= magicNumber
+                if bet * magicNumber <= cashBal:
+                    bet *= magicNumber
+                    print(Fore.MAGENTA + f"Magic multiplier x{magicNumber} applied. New bet: ${bet}")
+                else:
+                    print(Fore.YELLOW + f"Not enough balance to apply x{magicNumber}. Bet remains ${bet}.")
             else:
                 print(Fore.YELLOW + "No magic number purchased; multiplier not applied.")
-        # Example of checking for None (null in Python): only proceed if a magic number was chosen
-        if magicNumber is not None:
-            pass
 
         a = random.randint(1, 9)
         b = random.randint(1, 9)
@@ -230,6 +242,10 @@ def slots(player):
                 continue
             else:
                 break
+
+    # Notify if out of funds
+    if cashBal <= 0:
+        print(Fore.RED + "You're out of funds. Add cash to keep playing next time.")
 
     # After session ends, persist final balance and offer leaderboard
     player["balance"] = cashBal
