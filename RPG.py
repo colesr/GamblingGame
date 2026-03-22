@@ -6,17 +6,11 @@ import copy
 import random
 import math
 import time
-
-# Optional terminal colors (fallback if not available)
 try:
-    from colorama import init as _colorama_init, Fore, Style
-    _colorama_init(autoreset=True)
-except Exception:  # graceful fallback when colorama isn't installed
-    class _Dummy:
-        RESET_ALL = ""
-        BRIGHT = DIM = NORMAL = ""
-        BLACK = RED = GREEN = YELLOW = BLUE = MAGENTA = CYAN = WHITE = ""
-    Fore = Style = _Dummy()
+    import msvcrt
+    _HAS_MS = True
+except Exception:
+    _HAS_MS = False
 
 # ══════════════════════════════════════════════
 #  FILE PATHS & SAVE SYSTEM
@@ -97,6 +91,7 @@ PLAYER_ACTIONS = {
     "attack":   {"name": "Attack",        "mult": 1.0, "stamina_cost": 5},
     "heavy":    {"name": "Heavy Strike",  "mult": 1.8, "stamina_cost": 14},
     "spell":    {"name": "Cast Spell",    "mult": 0.0, "stamina_cost": 12},
+    "summon":   {"name": "Summon Spirit", "mult": 0.0, "stamina_cost": 10},
     "dodge":    {"name": "Dodge",         "mult": 0.0, "stamina_cost": 8},
     "use_item": {"name": "Use Item",      "mult": 0.0, "stamina_cost": 0},
     "flee":     {"name": "Flee",          "mult": 0.0, "stamina_cost": 10},
@@ -173,6 +168,11 @@ def load_hero(name):
         print(f"[SAVE] Hero '{name}' not found.")
         return None
     hero["last_played"] = _ts()
+    # Backfill new meta fields for older saves
+    try:
+        ensure_hero_meta(hero)
+    except Exception:
+        pass
     _write_db(db)
     print(f"[SAVE] '{name}' loaded.")
     return hero
@@ -314,6 +314,14 @@ def build_hero(name, type_key, gift_key, magic_key, home_key):
         "reputation":  {"kingdom": 0, "thieves": 0, "mages": 0, "wilds": 0, "underworld": 0},
         "stats":       {"quests_complete": 0, "quests_failed": 0, "enemies_defeated": 0, "spells_cast": 0, "times_died": 0, "gold_earned": 0},
         "status":      {"poisoned": False, "poison_turns": 0, "shielded": False, "stunned": False},
+        "sleep_counter": 0,
+        "spirit": {
+            "known": False,
+            "word": None,
+            "animal": None,
+            "active": False,
+            "turns_left": 0
+        },
         "save_slots":  {},
     }
 
@@ -345,6 +353,7 @@ def add_xp(hero, amount):
 #  DISPLAY
 # ══════════════════════════════════════════════
 def show_hero(hero):
+    ensure_hero_meta(hero)
     a  = hero["attributes"]
     ms = hero["magic_system"]
     rp = hero["reputation"]
@@ -375,6 +384,10 @@ def show_hero(hero):
     _div()
     print(f"  MAGIC — {ms['element'].upper()}  (Mastery {ms['mastery']}/10)")
     print(f"  Spells: {', '.join(ms['spells'])}")
+    # Spirit info
+    sp = hero.get('spirit', {})
+    if sp.get('known'):
+        print(f"  Spirit Ally: {sp.get('animal','Spirit')}  ·  Word: {sp.get('word','?')}")
     _div()
     print("  REPUTATION")
     for fac, rep in rp.items():
@@ -427,6 +440,110 @@ def use_item(hero, item_name=None):
             print(f"  💊 Used {item['name']} — restored {heal} HP.")
     hero["inventory"].remove(item)
     return True
+
+
+# ══════════════════════════════════════════════
+#  SLEEP, DREAMS & SPIRIT SUMMON
+# ══════════════════════════════════════════════
+
+def ensure_hero_meta(hero):
+    # Backfill fields for older saves
+    if "sleep_counter" not in hero:
+        hero["sleep_counter"] = 0
+    if "spirit" not in hero or not isinstance(hero.get("spirit"), dict):
+        hero["spirit"] = {
+            "known": False,
+            "word": None,
+            "animal": None,
+            "active": False,
+            "turns_left": 0,
+        }
+    else:
+        sp = hero["spirit"]
+        sp.setdefault("known", False)
+        sp.setdefault("word", None)
+        sp.setdefault("animal", None)
+        sp.setdefault("active", False)
+        sp.setdefault("turns_left", 0)
+
+
+def dream_event(hero):
+    ensure_hero_meta(hero)
+    animals = [
+        "Wolf", "Hawk", "Bear", "Panther", "Stag", "Fox",
+        "Owl", "Tiger", "Lynx", "Turtle", "Phoenix", "Dragonfly"
+    ]
+    words = [
+        "ORISON", "LUMEN", "UMBRA", "AEGIS", "NEXUS", "AERIS",
+        "PYRA", "AQUA", "TERRA", "VOLT", "NOX", "NANO"
+    ]
+    if not hero["spirit"]["known"]:
+        hero["spirit"]["animal"] = random.choice(animals)
+        hero["spirit"]["word"]   = random.choice(words)
+        hero["spirit"]["known"]  = True
+    else:
+        # If already known, the dream reinforces the bond (no change to word)
+        pass
+    animal = hero["spirit"]["animal"]
+    word   = hero["spirit"]["word"]
+    magic  = hero.get("magic", hero.get("magic_system", {}).get("element", ""))
+    print("\n  ✨ Dream Vision ✨")
+    print(f"  A {animal} spirit pads through silver fog. It whispers: '{word}'.")
+    print(f"  Pair the word with your magic to summon it: '{word} {magic}'.")
+    print("  In battle, choose 'summon' and speak the phrase.")
+
+
+def forced_sleep(hero, reason="fatigue"):
+    ensure_hero_meta(hero)
+    print("\n  🛌 Exhaustion takes you. You make camp and sleep.")
+    # Full recovery
+    hero["hp"]      = hero.get("hp_max", hero.get("hp", 100))
+    hero["mana"]    = hero.get("mana_max", hero.get("mana", 60))
+    hero["stamina"] = hero.get("stamina_max", hero.get("stamina", 50))
+    if "status" in hero:
+        hero["status"]["poisoned"]     = False
+        hero["status"]["poison_turns"] = 0
+        hero["status"]["shielded"]     = False
+        hero["status"]["stunned"]      = False
+    hero["sleep_counter"] = 0
+    # 1/7 chance to have a dream
+    if random.randint(1,7) == 1:
+        dream_event(hero)
+    else:
+        print("  Your sleep is dreamless, but you feel restored.")
+    save_hero(hero)
+
+
+def maybe_force_sleep(hero):
+    ensure_hero_meta(hero)
+    if hero.get("sleep_counter", 0) >= 15:
+        print("\n  ⚠ You are worn down by the road and battle.")
+        forced_sleep(hero, reason="fatigue")
+
+
+def register_step(hero, kind):
+    # kind in {"move", "encounter"}
+    ensure_hero_meta(hero)
+    if kind in ("move", "encounter"):
+        hero["sleep_counter"] = hero.get("sleep_counter", 0) + 1
+        maybe_force_sleep(hero)
+
+
+def _spirit_attack(hero, enemy):
+    # Spirit aids the hero with a magic-infused strike
+    ensure_hero_meta(hero)
+    sp = hero["spirit"]
+    if not sp.get("active"):
+        return
+    base = 3 + hero["attributes"].get("magic_power", 5)//2 + hero.get("level",1)//2
+    dmg  = max(1, int(base * (0.85 + random.random()*0.5)))
+    if enemy["status"].get("shielded"):
+        dmg = dmg // 2
+        enemy["status"]["shielded"] = False
+        print("  🛡  Enemy shield absorbs part of the spirit's strike.")
+    enemy["hp"] = max(0, enemy["hp"] - dmg)
+    animal = sp.get("animal", "Spirit")
+    print(f"  🐾 {animal} Spirit slashes for {dmg} damage! (HP: {enemy['hp']}/{enemy['hp_max']})")
 
 
 # ══════════════════════════════════════════════
@@ -506,151 +623,18 @@ def show_quests(hero):
 
 
 # ══════════════════════════════════════════════
-#  GRAPHICS & ANIMATIONS (Terminal)
-# ══════════════════════════════════════════════
-GRAPHICS_ON = True
-ANIM_SPEED  = 0.02
-
-
-def _gfx_sleep(t):
-    if GRAPHICS_ON and t > 0:
-        time.sleep(t)
-
-
-def _color(text, color=None, style=None):
-    try:
-        prefix = ""
-        if style == "bright":
-            prefix += getattr(Style, "BRIGHT", "")
-        if color:
-            prefix += color
-        if prefix:
-            return f"{prefix}{text}{getattr(Style, 'RESET_ALL', '')}"
-        return text
-    except Exception:
-        return text
-
-
-def _hp_color_ratio(r):
-    if r > 0.6:
-        return getattr(Fore, "GREEN", "")
-    if r > 0.3:
-        return getattr(Fore, "YELLOW", "")
-    return getattr(Fore, "RED", "")
-
-
-def _anim_arrow(left="YOU", right="ENEMY", color=None, width=20, head="▶"):
-    if not GRAPHICS_ON:
-        return
-    c = color or getattr(Fore, "CYAN", "")
-    for i in range(width + 1):
-        line = "  " + f"{left:<12}" + "-" * i + _color(head, c, "bright") + "-" * (width - i) + f"{right:>12}"
-        print(line, end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED)
-    print(" " * 80, end="\r")
-
-
-def _anim_spell(element="Fire", from_player=True):
-    if not GRAPHICS_ON:
-        return
-    color_map = {
-        "Fire": getattr(Fore, "RED", ""),
-        "Water": getattr(Fore, "CYAN", ""),
-        "Earth": getattr(Fore, "YELLOW", ""),
-        "Air": getattr(Fore, "WHITE", ""),
-        "Lightning": getattr(Fore, "MAGENTA", ""),
-        "Darkness": getattr(Fore, "MAGENTA", ""),
-        "Nano": getattr(Fore, "GREEN", ""),
-    }
-    c = color_map.get(element, getattr(Fore, "WHITE", ""))
-    L = "YOU" if from_player else "ENEMY"
-    R = "ENEMY" if from_player else "YOU"
-    seq = ["·", "•", "●", "◆", "◈", "◆", "●", "•", "·"]
-    for ch in seq:
-        print("  " + f"{L:<12}" + _color(ch * 10, c, "bright") + f"{R:>12}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 2)
-    print(" " * 80, end="\r")
-
-
-def _anim_attack(from_player=True, crit=False):
-    if not GRAPHICS_ON:
-        return
-    L = "YOU" if from_player else "ENEMY"
-    R = "ENEMY" if from_player else "YOU"
-    color = getattr(Fore, "RED", "") if crit else getattr(Fore, "CYAN", "")
-    head  = "✦" if crit else "▶"
-    _anim_arrow(L, R, color=color, head=head)
-
-
-def _anim_shield(name):
-    if not GRAPHICS_ON:
-        return
-    frames = ["[    ]", "[|   ]", "[||  ]", "[||| ]", "[||||]", "[ |||]", "[  ||]", "[   |]"]
-    for f in frames + frames[::-1]:
-        print(f"  🛡  {name} {f}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.5)
-    print(" " * 60, end="\r")
-
-
-def _anim_poison(src, dst):
-    if not GRAPHICS_ON:
-        return
-    for i in range(6):
-        dots = "☠" if i % 2 else "✖"
-        colored = _color(dots, getattr(Fore, "GREEN", ""))
-        print(f"  {src} {colored} → {dst}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 2)
-    print(" " * 60, end="\r")
-
-
-def _anim_poison_tick(name):
-    if not GRAPHICS_ON:
-        return
-    for ch in [".", "..", "...", "..", "."]:
-        colored = _color(ch, getattr(Fore, "GREEN", ""))
-        print(f"  ☠  Poison on {name} {colored}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.5)
-    print(" " * 60, end="\r")
-
-
-def _anim_dodge(name="You"):
-    if not GRAPHICS_ON:
-        return
-    for f in ["<     >", " <   > ", "  < >  ", "   v   "]:
-        print(f"  💨 {name} {f}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.8)
-    print(" " * 60, end="\r")
-
-
-def _anim_vs(hero_name, enemy_name):
-    if not GRAPHICS_ON:
-        return
-    banner = f"{hero_name.upper():<16}  VS  {enemy_name.upper():>16}"
-    for i in range(6):
-        c = getattr(Fore, "CYAN", "") if i % 2 == 0 else getattr(Fore, "MAGENTA", "")
-        print("  " + _color(banner, c, "bright"))
-        _gfx_sleep(ANIM_SPEED * 3)
-
-# ══════════════════════════════════════════════
 #  BATTLE ENGINE
 # ══════════════════════════════════════════════
 def _show_combatants(hero, enemy):
     _div("═")
-    title = f"  {hero['name'].upper():<22}  VS  {enemy['name'].upper()}"
-    print(_color(title, getattr(Fore, "CYAN", ""), "bright") if GRAPHICS_ON else title)
+    print(f"  {hero['name'].upper():<22}  VS  {enemy['name'].upper()}")
     _div()
     def hp_bar(cur, mx, w=20):
         filled = int(w * cur / max(mx,1))
-        bar = "█"*filled + "░"*(w-filled)
-        ratio = (cur / max(mx,1)) if mx else 0
-        return _color(bar, _hp_color_ratio(ratio)) if GRAPHICS_ON else bar
-    def st_bar(cur, mx, w=20):
-        filled = int(w * cur / max(mx,1))
-        bar = "█"*filled + "░"*(w-filled)
-        return _color(bar, getattr(Fore, "BLUE", "")) if GRAPHICS_ON else bar
+        return "█"*filled + "░"*(w-filled)
     print(f"  HP  {hp_bar(hero['hp'],  hero['hp_max'])}  {hero['hp']}/{hero['hp_max']}")
     print(f"  HP  {hp_bar(enemy['hp'], enemy['hp_max'])}  {enemy['hp']}/{enemy['hp_max']}   [{enemy['name']}]")
-    print(f"  ST  {st_bar(hero['stamina'], hero['stamina_max'])}  {hero['stamina']}/{hero['stamina_max']}")
+    print(f"  ST  {hp_bar(hero['stamina'], hero['stamina_max'])}  {hero['stamina']}/{hero['stamina_max']}")
     _div("═")
 
 def _show_status(entity, name):
@@ -665,7 +649,6 @@ def _show_status(entity, name):
 def _tick_poison(entity, name):
     s = entity.get("status", {})
     if s.get("poisoned") and s["poison_turns"] > 0:
-        _anim_poison_tick(name)
         dmg = random.randint(2, 5)
         entity["hp"] = max(0, entity["hp"] - dmg)
         s["poison_turns"] -= 1
@@ -690,14 +673,12 @@ def _enemy_turn(hero, enemy, player_dodging):
 
     if ability_key == "shield_pulse":
         s["shielded"] = True
-        _anim_shield(enemy['name'])
         print(f"  🛡  {enemy['name']} activates shield!")
         return
 
     raw_dmg = int(enemy["damage"] * ability["mult"] * (0.8 + random.random() * 0.5))
 
     if player_dodging and raw_dmg > 0:
-        _anim_dodge("You")
         if random.random() < 0.70:
             print("  💨 You dodge the attack!")
             return
@@ -705,13 +686,11 @@ def _enemy_turn(hero, enemy, player_dodging):
             print("  ❌ Dodge failed!")
 
     if raw_dmg > 0:
-        _anim_attack(from_player=False, crit=(ability_key == 'crit_strike'))
         hero["hp"] = max(0, hero["hp"] - raw_dmg)
         label = "💥 CRITICAL HIT!" if ability_key == "crit_strike" else "🩸"
         print(f"  {label} {enemy['name']} deals {raw_dmg} damage to you.")
 
     if ability["effect"] == "poison":
-        _anim_poison(enemy['name'], hero['name'])
         hero["status"]["poisoned"]     = True
         hero["status"]["poison_turns"] = 3
         print("  ☠  You are POISONED for 3 turns!")
@@ -753,20 +732,16 @@ def _player_turn(hero, enemy):
 
     # ── Dodge ──
     if action == "dodge":
-        _anim_dodge("You")
         print("  💨 You prepare to dodge!")
         return None, True   # player_dodging = True
 
     # ── Spell ──
     if action == "spell":
-        element  = hero["magic_system"].get("element", "Fire")
-        _anim_spell(element, from_player=True)
         sp_power = int(hero["attributes"]["magic_power"] * 1.5)
         dmg      = max(1, int(sp_power * (0.8 + random.random() * 0.6)))
         if enemy["status"].get("shielded"):
             dmg = dmg // 2
             enemy["status"]["shielded"] = False
-            _anim_shield(enemy['name'])
             print(f"  🛡  Shield absorbed — reduced to {dmg} damage.")
         enemy["hp"] = max(0, enemy["hp"] - dmg)
         hero["mana"] = max(0, hero["mana"] - 12)
@@ -775,14 +750,33 @@ def _player_turn(hero, enemy):
         print(f"  🔮 {spell} — deals {dmg} to {enemy['name']}! (HP: {enemy['hp']}/{enemy['hp_max']})")
         return None, False
 
+    # ── Summon ──
+    if action == "summon":
+        ensure_hero_meta(hero)
+        sp = hero["spirit"]
+        if sp.get("active"):
+            print("  🐾 Your spirit is already at your side!")
+            return None, False
+        if not sp.get("known"):
+            print("  You have not learned the spirit's word yet. Rest and dream...")
+            return None, False
+        phrase = input("  Speak the phrase (WORD MAGIC): ").strip()
+        expected = f"{sp['word']} {hero.get('magic', hero.get('magic_system',{}).get('element',''))}"
+        norm = lambda s: " ".join(s.upper().split())
+        if norm(phrase) == norm(expected):
+            sp["active"] = True
+            sp["turns_left"] = 3
+            print(f"  🐾 {sp.get('animal','Spirit')} answers your call and joins the battle!")
+        else:
+            print("  ...Nothing answers. The words were not quite right.")
+        return None, False
+
     # ── Attack / Heavy ──
     mult    = act["mult"]
-    _anim_attack(from_player=True, crit=(action == "heavy"))
     raw_dmg = max(1, int(hero["damage"] * mult * (0.8 + random.random() * 0.5)))
     if enemy["status"].get("shielded"):
         raw_dmg = raw_dmg // 2
         enemy["status"]["shielded"] = False
-        _anim_shield(enemy['name'])
         print(f"  🛡  Shield absorbed — reduced to {raw_dmg} damage.")
     enemy["hp"] = max(0, enemy["hp"] - raw_dmg)
     print(f"  💢 You deal {raw_dmg} damage to {enemy['name']}! (HP: {enemy['hp']}/{enemy['hp_max']})")
@@ -817,13 +811,12 @@ def award_victory(hero, enemy):
     _div("═")
 
 def battle(hero, enemy):
+    ensure_hero_meta(hero)
     print(f"\n{'═'*56}")
-    title = f"  ⚡  ENCOUNTER — {enemy['name'].upper()}"
-    print(_color(title, getattr(Fore,'MAGENTA',''), 'bright') if GRAPHICS_ON else title)
+    print(f"  ⚡  ENCOUNTER — {enemy['name'].upper()}")
     print(f"  {enemy['flavor']}")
     print(f"  Level {enemy['level']}  │  HP {enemy['hp']}  │  DMG {enemy['damage']}  │  [{', '.join(enemy['abilities'])}]")
     print(f"{'═'*56}\n")
-    _anim_vs(hero['name'], enemy['name'])
 
     turn = 0
     while hero["hp"] > 0 and enemy["hp"] > 0:
@@ -845,9 +838,23 @@ def battle(hero, enemy):
         # Player turn
         result, player_dodging = _player_turn(hero, enemy)
         if result == "fled":
+            # Dismiss spirit on retreat
+            if hero.get("spirit"):
+                hero["spirit"]["active"] = False
+                hero["spirit"]["turns_left"] = 0
             return "fled"
         if enemy["hp"] <= 0:
             break
+
+        # Spirit ally turn
+        if hero.get("spirit", {}).get("active"):
+            _spirit_attack(hero, enemy)
+            if enemy["hp"] <= 0:
+                break
+            hero["spirit"]["turns_left"] -= 1
+            if hero["spirit"]["turns_left"] <= 0:
+                hero["spirit"]["active"] = False
+                print("  🐾 The spirit fades back into the veil.")
 
         # Enemy turn
         _enemy_turn(hero, enemy, player_dodging)
@@ -856,6 +863,10 @@ def battle(hero, enemy):
     _div("═")
     if enemy["hp"] <= 0:
         award_victory(hero, enemy)
+        # Dismiss spirit after battle ends
+        if hero.get("spirit"):
+            hero["spirit"]["active"] = False
+            hero["spirit"]["turns_left"] = 0
         return "won"
     else:
         print(f"  💀  YOU HAVE FALLEN.")
@@ -864,6 +875,10 @@ def battle(hero, enemy):
         hero["hp"] = max(1, hero["hp_max"] // 3)
         print(f"  > Respawning at {hero['hp']}/{hero['hp_max']} HP...")
         _div("═")
+        # Dismiss spirit after defeat
+        if hero.get("spirit"):
+            hero["spirit"]["active"] = False
+            hero["spirit"]["turns_left"] = 0
         return "lost"
 
 
@@ -1028,6 +1043,7 @@ def show_world_map(hero):
 
 def rest_at_city(hero):
     ensure_world(hero)
+    ensure_hero_meta(hero)
     w = hero["world"]
     c = _city_at(w, w["pos"]["x"], w["pos"]["y"])
     if not c or not c.get("discovered"):
@@ -1043,11 +1059,16 @@ def rest_at_city(hero):
     hero["stamina"] = hero["stamina_max"]
     hero["status"]["poisoned"] = False
     hero["status"]["poison_turns"] = 0
+    hero["sleep_counter"] = 0
     print(f"  You rest in {c['name']}. Fully recovered. (-${cost})")
+    # Chance to dream
+    if random.randint(1,7) == 1:
+        dream_event(hero)
 
 
 def travel_menu(hero):
     ensure_world(hero)
+    ensure_hero_meta(hero)
     w = hero["world"]
 
     while True:
@@ -1084,7 +1105,10 @@ def travel_menu(hero):
                         if result == "won":
                             push_to_leaderboard(hero)
                             check_quests(hero)
+                        register_step(hero, 'encounter')
                         save_hero(hero)
+                # Count this move toward fatigue
+                register_step(hero, 'move')
             else:
                 print("  You are at the edge of the world.")
 
@@ -1116,6 +1140,7 @@ def travel_menu(hero):
                     hero["gold"] -= cost
                     w["pos"]["x"], w["pos"]["y"] = dest["x"], dest["y"]
                     print(f"  You travel to {dest['name']}. (-${cost})")
+                    register_step(hero, 'move')
                     save_hero(hero)
             else:
                 print("  Cancelled.")
@@ -1152,6 +1177,7 @@ def main_menu(hero):
             if result == "won":
                 push_to_leaderboard(hero)
                 check_quests(hero)
+            register_step(hero, 'encounter')
             save_hero(hero)
 
         elif choice == "2":
@@ -1198,11 +1224,39 @@ def main_menu(hero):
 # ══════════════════════════════════════════════
 #  ENTRY POINT
 # ══════════════════════════════════════════════
-if __name__ == "__main__":
+
+def _show_opening():
+    # Opening banner that can be skipped with a key press
     print("╔══════════════════════════════════════════╗")
     print("║       WELCOME TO THE HERO'S JOURNEY      ║")
     print("║           NEON DISTRICT // 2157          ║")
     print("╚══════════════════════════════════════════╝\n")
+    # Hint to the player
+    print("(Press any key to skip...)")
+    # On Windows consoles, allow non-blocking skip with any key
+    if _HAS_MS:
+        start = time.time()
+        # Wait briefly to show the banner unless a key is pressed
+        while time.time() - start < 2.5:
+            if msvcrt.kbhit():
+                try:
+                    # Clear key buffer
+                    while msvcrt.kbhit():
+                        msvcrt.getch()
+                except Exception:
+                    pass
+                break
+            time.sleep(0.05)
+    else:
+        # Fallback: simple prompt that lets the player skip or continue
+        try:
+            ans = input("Press Enter to continue, or type S to skip: ").strip().lower()
+        except EOFError:
+            ans = ""
+    print()
+
+if __name__ == "__main__":
+    _show_opening()
 
     existing = list_heroes()
     hero     = None
@@ -1265,135 +1319,10 @@ if __name__ == "__main__":
             equip_item(hero, item["name"])
             break
 
+    ensure_hero_meta(hero)
     show_hero(hero)
     push_to_leaderboard(hero)
     print("\nYou are ready to begin the epic journey!")
     print("─"*56)
 
     main_menu(hero)
-
-# ══════════════════════════════════════════════
-#  GRAPHICS & ANIMATIONS (Terminal)
-# ══════════════════════════════════════════════
-GRAPHICS_ON = True
-ANIM_SPEED  = 0.02
-
-
-def _gfx_sleep(t):
-    if GRAPHICS_ON and t > 0:
-        time.sleep(t)
-
-
-def _color(text, color=None, style=None):
-    try:
-        prefix = ""
-        if style == "bright":
-            prefix += getattr(Style, "BRIGHT", "")
-        if color:
-            prefix += color
-        if prefix:
-            return f"{prefix}{text}{getattr(Style, 'RESET_ALL', '')}"
-        return text
-    except Exception:
-        return text
-
-
-def _hp_color_ratio(r):
-    if r > 0.6:
-        return getattr(Fore, "GREEN", "")
-    if r > 0.3:
-        return getattr(Fore, "YELLOW", "")
-    return getattr(Fore, "RED", "")
-
-
-def _anim_arrow(left="YOU", right="ENEMY", color=None, width=20, head="▶"):
-    if not GRAPHICS_ON:
-        return
-    c = color or getattr(Fore, "CYAN", "")
-    for i in range(width + 1):
-        line = "  " + f"{left:<12}" + "-" * i + _color(head, c, "bright") + "-" * (width - i) + f"{right:>12}"
-        print(line, end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED)
-    print(" " * 80, end="\r")
-
-
-def _anim_spell(element="Fire", from_player=True):
-    if not GRAPHICS_ON:
-        return
-    color_map = {
-        "Fire": getattr(Fore, "RED", ""),
-        "Water": getattr(Fore, "CYAN", ""),
-        "Earth": getattr(Fore, "YELLOW", ""),
-        "Air": getattr(Fore, "WHITE", ""),
-        "Lightning": getattr(Fore, "MAGENTA", ""),
-        "Darkness": getattr(Fore, "MAGENTA", ""),
-        "Nano": getattr(Fore, "GREEN", ""),
-    }
-    c = color_map.get(element, getattr(Fore, "WHITE", ""))
-    L = "YOU" if from_player else "ENEMY"
-    R = "ENEMY" if from_player else "YOU"
-    seq = ["·", "•", "●", "◆", "◈", "◆", "●", "•", "·"]
-    for ch in seq:
-        print("  " + f"{L:<12}" + _color(ch * 10, c, "bright") + f"{R:>12}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 2)
-    print(" " * 80, end="\r")
-
-
-def _anim_attack(from_player=True, crit=False):
-    if not GRAPHICS_ON:
-        return
-    L = "YOU" if from_player else "ENEMY"
-    R = "ENEMY" if from_player else "YOU"
-    color = getattr(Fore, "RED", "") if crit else getattr(Fore, "CYAN", "")
-    head  = "✦" if crit else "▶"
-    _anim_arrow(L, R, color=color, head=head)
-
-
-def _anim_shield(name):
-    if not GRAPHICS_ON:
-        return
-    frames = ["[    ]", "[|   ]", "[||  ]", "[||| ]", "[||||]", "[ |||]", "[  ||]", "[   |]"]
-    for f in frames + frames[::-1]:
-        print(f"  🛡  {name} {f}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.5)
-    print(" " * 60, end="\r")
-
-
-def _anim_poison(src, dst):
-    if not GRAPHICS_ON:
-        return
-    for i in range(6):
-        dots = "☠" if i % 2 else "✖"
-        colored = _color(dots, getattr(Fore, "GREEN", ""))
-        print(f"  {src} {colored} → {dst}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 2)
-    print(" " * 60, end="\r")
-
-
-def _anim_poison_tick(name):
-    if not GRAPHICS_ON:
-        return
-    for ch in [".", "..", "...", "..", "."]:
-        colored = _color(ch, getattr(Fore, "GREEN", ""))
-        print(f"  ☠  Poison on {name} {colored}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.5)
-    print(" " * 60, end="\r")
-
-
-def _anim_dodge(name="You"):
-    if not GRAPHICS_ON:
-        return
-    for f in ["<     >", " <   > ", "  < >  ", "   v   "]:
-        print(f"  💨 {name} {f}", end="\r", flush=True)
-        _gfx_sleep(ANIM_SPEED * 1.8)
-    print(" " * 60, end="\r")
-
-
-def _anim_vs(hero_name, enemy_name):
-    if not GRAPHICS_ON:
-        return
-    banner = f"{hero_name.upper():<16}  VS  {enemy_name.upper():>16}"
-    for i in range(6):
-        c = getattr(Fore, "CYAN", "") if i % 2 == 0 else getattr(Fore, "MAGENTA", "")
-        print("  " + _color(banner, c, "bright"))
-        _gfx_sleep(ANIM_SPEED * 3)
